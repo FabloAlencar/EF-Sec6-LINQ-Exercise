@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Vidzy
@@ -92,10 +93,10 @@ namespace Vidzy
             System.Console.WriteLine("\nLINQ Syntax - List of genres and number of videos they include, sorted by the number of videos:");
 
             var groups3 =
-              from v in dbContext.Videos
-              orderby v.Name
-              group v by v.Genre.Name into g
-              select new { GenreName = g.Key, VideosQuantity = g.Count() };
+              from gen in dbContext.Genres
+              join vid in dbContext.Videos on gen.Id equals vid.GenreId into g
+              orderby gen.Videos.Count() descending
+              select new { GenreName = gen.Name, VideosQuantity = gen.Videos.Count() };
 
             foreach (var group in groups3)
             {
@@ -170,23 +171,33 @@ namespace Vidzy
                 .GroupBy(v => v.Classification)
                 .Select(g => new
                 {
-                    Classification = g.Key.ToString(),
+                    ClassificationName = g.Key.ToString(),
                     VideosQuantity = g.Count()
-                }).OrderBy(v => v.Classification);
+                }).OrderBy(g => g.ClassificationName);
 
-            foreach (var group in groups2)
+            foreach (var group in groups1)
             {
-                System.Console.WriteLine("Classification: {0}, Number of Videos: {1}", group.Classification, group.VideosQuantity);
+                System.Console.WriteLine("Classification: {0}, Number of Videos: {1}", group.ClassificationName, group.VideosQuantity);
             }
 
             //  LINQ Extension Methods - List of genres and number of videos they include, sorted by the number of videos
             //  LINQ Extension Methods - List of genres and number of videos they include, sorted by the number of videos
             //  LINQ Extension Methods - List of genres and number of videos they include, sorted by the number of videos
             System.Console.WriteLine("\nLINQ Extension Methods - List of genres and number of videos they include, sorted by the number of videos:");
-            //videos = null;
+            var groups5 = dbContext.Genres.GroupJoin(dbContext.Videos,
+                g => g.Id,
+                v => v.GenreId,
+                (genre, video) =>
+                new
+                {
+                    GenreName = genre.Name,
+                    VideosQuantity = video.Count()
+                }).OrderByDescending(g => g.VideosQuantity);
 
-            foreach (var video in videos)
-                System.Console.WriteLine("\t" + video.Name);
+            foreach (var group in groups5)
+            {
+                System.Console.WriteLine("Genre: {0}, Number of Videos: {1}", group.GenreName, group.VideosQuantity);
+            }
 
             System.Console.ReadLine();
         }
